@@ -17,7 +17,7 @@
 #include <thread>
 // uncomment to bisplay debug info
 // #define SOAPY_FOBOS_PRINT_DEBUG
-#define DEFAULT_BUFF_LEN (128 * 1024)
+#define DEFAULT_BUFF_LEN (4096 * 1024)
 #define DEFAULT_BUFS_COUNT 16
 
 static const char * __CLASS__ = "SoapyFobosSDR";
