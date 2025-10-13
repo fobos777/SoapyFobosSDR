@@ -7,10 +7,9 @@
 
 #include "SoapyFobosSDR.hpp"
 #include <SoapySDR/Registry.hpp>
-#include <string.h>
-#include <mutex>
 #include <map>
-
+#include <mutex>
+#include <string.h>
 
 static std::vector<SoapySDR::Kwargs> findSDR(const SoapySDR::Kwargs &args)
 {
@@ -23,7 +22,7 @@ static std::vector<SoapySDR::Kwargs> findSDR(const SoapySDR::Kwargs &args)
 #ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf("[%d], %s\n", count, serials);
 #endif
-    char* pserial = strtok(serials, " ");
+    char *pserial = strtok(serials, " ");
     SoapySDR_logf(SOAPY_SDR_DEBUG, "found devices: %d\n", count);
     for (int index = 0; index < count; index++)
     {
@@ -33,15 +32,15 @@ static std::vector<SoapySDR::Kwargs> findSDR(const SoapySDR::Kwargs &args)
         devInfo["serial"] = pserial;
         devInfo["manufacturer"] = "RigExpert";
         pserial = strtok(0, " ");
-        if (args.count("serial") != 0) 
+        if (args.count("serial") != 0)
         {
-            if (args.at("serial") != devInfo.at("serial")) 
+            if (args.at("serial") != devInfo.at("serial"))
             {
                 continue;
             }
             SoapySDR_logf(SOAPY_SDR_DEBUG, "Found device by serial %s", devInfo.at("serial").c_str());
         }
-        
+
         results.push_back(devInfo);
     }
     return results;

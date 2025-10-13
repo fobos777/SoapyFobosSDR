@@ -10,53 +10,44 @@
 #include <algorithm>
 #include <cstring>
 
-SoapyFobosSDR::SoapyFobosSDR(const SoapySDR::Kwargs &args):
-    _device_index(0),
-    _dev(nullptr),
-    _sample_rate(25000000.0),
-    _center_frequency(100000000.0),
-    _direct_sampling(0),
-    _lna_gain(0),
-    _lna_gain_scale(1.0 / 16.0),
-    _vga_gain(0),
-    _vga_gain_scale(1.0 / 2.0),
-    _rx_bufs(0),
-    _rx_buffs_count(DEFAULT_BUFS_COUNT),
-    _rx_buff_len(DEFAULT_BUFF_LEN),
-    _rx_filled(0)
+SoapyFobosSDR::SoapyFobosSDR(const SoapySDR::Kwargs &args)
+    : _device_index(0), _dev(nullptr), _sample_rate(25000000.0), _center_frequency(100000000.0), _direct_sampling(0),
+      _lna_gain(0), _lna_gain_scale(1.0 / 16.0), _vga_gain(0), _vga_gain_scale(1.0 / 2.0), _rx_bufs(0),
+      _rx_buffs_count(DEFAULT_BUFS_COUNT), _rx_buff_len(DEFAULT_BUFF_LEN), _rx_filled(0)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s()\n", __CLASS__, __FUNCTION__);
-#endif    
+#endif
     _lna_gain_scale = 1.0 / 16.0;
     _vga_gain_scale = 1.0 / 2.0;
 
     int result = 0;
 
     fobos_rx_get_api_info(lib_version, drv_version);
-    printf("API Info lib: %s drv: %s\n", lib_version, drv_version); 
+    printf("API Info lib: %s drv: %s\n", lib_version, drv_version);
 
     if (args.count("label") != 0)
     {
         SoapySDR_logf(SOAPY_SDR_INFO, "Opening %s...", args.at("label").c_str());
     }
 
-    //if (args.count("serial") == 0) throw std::runtime_error("No RTL-SDR devices found!");
+    // if (args.count("serial") == 0) throw std::runtime_error("No RTL-SDR devices found!");
 
-    //const auto serial = args.at("serial");
-    //deviceId = rtlsdr_get_index_by_serial(serial.c_str());
-    //if (_deviceId < 0) throw std::runtime_error("rtlsdr_get_index_by_serial("+serial+") - " + std::to_string(_deviceId));
+    // const auto serial = args.at("serial");
+    // deviceId = rtlsdr_get_index_by_serial(serial.c_str());
+    // if (_deviceId < 0) throw std::runtime_error("rtlsdr_get_index_by_serial("+serial+") - " +
+    // std::to_string(_deviceId));
 
     _device_index = 0;
     SoapySDR_logf(SOAPY_SDR_DEBUG, "opening device #%d", _device_index);
     result = fobos_rx_open(&_dev, _device_index);
-    if (result != 0) 
+    if (result != 0)
     {
         throw std::runtime_error("Unable to open Fobos SDR device");
     }
 
-    result = fobos_rx_get_board_info(_dev, hw_revision, fw_version, manufacturer, product, serial);       
-    if (result != 0) 
+    result = fobos_rx_get_board_info(_dev, hw_revision, fw_version, manufacturer, product, serial);
+    if (result != 0)
     {
         throw std::runtime_error("Unable to obtain devoce info");
     }
@@ -64,9 +55,9 @@ SoapyFobosSDR::SoapyFobosSDR(const SoapySDR::Kwargs &args):
 
 SoapyFobosSDR::~SoapyFobosSDR(void)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s()\n", __CLASS__, __FUNCTION__);
-#endif       
+#endif
     fobos_rx_close(_dev);
 }
 
@@ -120,9 +111,9 @@ bool SoapyFobosSDR::getFullDuplex(const int direction, const size_t channel) con
 
 std::vector<std::string> SoapyFobosSDR::listAntennas(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif      
+#endif
     std::vector<std::string> antennas;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
@@ -133,9 +124,9 @@ std::vector<std::string> SoapyFobosSDR::listAntennas(const int direction, const 
 
 void SoapyFobosSDR::setAntenna(const int direction, const size_t channel, const std::string &name)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d, %s)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str());
-#endif   
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0) && (name == "RX"))
     {
     }
@@ -147,13 +138,13 @@ void SoapyFobosSDR::setAntenna(const int direction, const size_t channel, const 
 
 std::string SoapyFobosSDR::getAntenna(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif   
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
         return "RX";
-    }    
+    }
     return "";
 }
 
@@ -181,12 +172,12 @@ bool SoapyFobosSDR::hasFrequencyCorrection(const int direction, const size_t cha
 
 std::vector<std::string> SoapyFobosSDR::listGains(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif  
+#endif
     std::vector<std::string> results;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
-    {    
+    {
         results.push_back("LNA");
         results.push_back("VGA");
     }
@@ -200,24 +191,15 @@ bool SoapyFobosSDR::hasGainMode(const int direction, const size_t channel) const
     return false;
 }
 
-void SoapyFobosSDR::setGain(const int direction, const size_t channel, const double value)
+void SoapyFobosSDR::setGain(const int, const size_t, const double)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
-    printf(">>> %s::%s(%d, %d, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, value);
-#endif  
-    //set the overall gain by distributing it across available gain elements
-    //OR delete this function to use SoapySDR's default gain distribution algorithm...
-    if ((direction == SOAPY_SDR_RX) && (channel == 0))
-    {
-        SoapySDR::Device::setGain(direction, channel, value);
-    }
 }
 
 void SoapyFobosSDR::setGain(const int direction, const size_t channel, const std::string &name, const double value)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
-    printf(">>> %s::%s(%d, %d, %s, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str(),  value);
-#endif    
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
+    printf(">>> %s::%s(%d, %d, %s, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str(), value);
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
         if (name == "LNA")
@@ -237,10 +219,10 @@ void SoapyFobosSDR::setGain(const int direction, const size_t channel, const std
 
 double SoapyFobosSDR::getGain(const int direction, const size_t channel, const std::string &name) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
 
-#endif  
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
         if (name == "LNA")
@@ -257,9 +239,9 @@ double SoapyFobosSDR::getGain(const int direction, const size_t channel, const s
 
 SoapySDR::Range SoapyFobosSDR::getGainRange(const int direction, const size_t channel, const std::string &name) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d, %s)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str());
-#endif  
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
         if (name == "LNA")
@@ -278,16 +260,12 @@ SoapySDR::Range SoapyFobosSDR::getGainRange(const int direction, const size_t ch
  * Frequency API
  ******************************************************************************/
 /******************************************************************************/
-void SoapyFobosSDR::setFrequency(
-        const int direction,
-        const size_t channel,
-        const std::string &name,
-        const double frequency,
-        const SoapySDR::Kwargs &args)
+void SoapyFobosSDR::setFrequency(const int direction, const size_t channel, const std::string &name,
+                                 const double frequency, const SoapySDR::Kwargs &args)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
-    printf(">>> %s::%s(%d, %d, %s, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str(),  frequency);
-#endif  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
+    printf(">>> %s::%s(%d, %d, %s, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str(), frequency);
+#endif
     (void)args;
     double actual;
     if ((direction == SOAPY_SDR_RX) && (channel == 0) && (name == "RF"))
@@ -304,9 +282,9 @@ void SoapyFobosSDR::setFrequency(
 /******************************************************************************/
 double SoapyFobosSDR::getFrequency(const int direction, const size_t channel, const std::string &name) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d, %s)\n", __CLASS__, __FUNCTION__, direction, (int)channel, name.c_str());
-#endif     
+#endif
     if ((direction == SOAPY_SDR_RX) && (channel == 0) && (name == "RF"))
     {
         return _center_frequency;
@@ -316,9 +294,9 @@ double SoapyFobosSDR::getFrequency(const int direction, const size_t channel, co
 /******************************************************************************/
 std::vector<std::string> SoapyFobosSDR::listFrequencies(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif     
+#endif
     std::vector<std::string> names;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
@@ -327,10 +305,8 @@ std::vector<std::string> SoapyFobosSDR::listFrequencies(const int direction, con
     return names;
 }
 /******************************************************************************/
-SoapySDR::RangeList SoapyFobosSDR::getFrequencyRange(
-        const int direction,
-        const size_t channel,
-        const std::string &name) const
+SoapySDR::RangeList SoapyFobosSDR::getFrequencyRange(const int direction, const size_t channel,
+                                                     const std::string &name) const
 {
     SoapySDR::RangeList results;
     if ((direction == SOAPY_SDR_RX) && (channel == 0) && (name == "RF"))
@@ -357,9 +333,9 @@ SoapySDR::ArgInfoList SoapyFobosSDR::getFrequencyArgsInfo(const int direction, c
 
 void SoapyFobosSDR::setSampleRate(const int direction, const size_t channel, const double rate)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d, %f)\n", __CLASS__, __FUNCTION__, direction, (int)channel, rate);
-#endif  
+#endif
     SoapySDR_logf(SOAPY_SDR_DEBUG, "Setting sample rate: %f", rate);
     double actual;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
@@ -388,9 +364,9 @@ double SoapyFobosSDR::getSampleRate(const int direction, const size_t channel) c
 
 std::vector<double> SoapyFobosSDR::listSampleRates(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif      
+#endif
     unsigned int count;
     std::vector<double> rates;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
@@ -400,7 +376,7 @@ std::vector<double> SoapyFobosSDR::listSampleRates(const int direction, const si
         {
             rates.resize(count);
             fobos_rx_get_samplerates(_dev, rates.data(), &count);
-            if (rates[0]>rates[count-1])
+            if (rates[0] > rates[count - 1])
             {
                 std::reverse(rates.begin(), rates.end());
             }
@@ -411,9 +387,9 @@ std::vector<double> SoapyFobosSDR::listSampleRates(const int direction, const si
 
 SoapySDR::RangeList SoapyFobosSDR::getSampleRateRange(const int direction, const size_t channel) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s(%d, %d)\n", __CLASS__, __FUNCTION__, direction, (int)channel);
-#endif      
+#endif
     SoapySDR::RangeList results;
     if ((direction == SOAPY_SDR_RX) && (channel == 0))
     {
@@ -426,7 +402,7 @@ SoapySDR::RangeList SoapyFobosSDR::getSampleRateRange(const int direction, const
             fobos_rx_get_samplerates(_dev, rates.data(), &count);
             if (rates[0] > rates[count - 1])
             {
-                results.push_back(SoapySDR::Range(rates[count - 1], rates[0]));    
+                results.push_back(SoapySDR::Range(rates[count - 1], rates[0]));
             }
             else
             {
@@ -443,9 +419,9 @@ SoapySDR::RangeList SoapyFobosSDR::getSampleRateRange(const int direction, const
 
 SoapySDR::ArgInfoList SoapyFobosSDR::getSettingInfo(void) const
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s()\n", __CLASS__, __FUNCTION__);
-#endif      
+#endif
     SoapySDR::ArgInfoList args;
     {
         SoapySDR::ArgInfo info;
@@ -465,16 +441,16 @@ SoapySDR::ArgInfoList SoapyFobosSDR::getSettingInfo(void) const
 
 void SoapyFobosSDR::writeSetting(const std::string &key, const std::string &value)
 {
-#ifdef SOAPY_FOBOS_PRINT_DEBUG  
+#ifdef SOAPY_FOBOS_PRINT_DEBUG
     printf(">>> %s::%s()\n", __CLASS__, __FUNCTION__);
-#endif      
+#endif
     if (key == "direct_samp")
     {
         try
         {
             _direct_sampling = std::stoi(value);
         }
-        catch (const std::invalid_argument &) 
+        catch (const std::invalid_argument &)
         {
             SoapySDR_logf(SOAPY_SDR_ERROR, "Invalid direct sampling mode '%s', [0:Off, 1:On]", value.c_str());
             _direct_sampling = 0;
@@ -486,11 +462,9 @@ void SoapyFobosSDR::writeSetting(const std::string &key, const std::string &valu
 
 std::string SoapyFobosSDR::readSetting(const std::string &key) const
 {
-    if (key == "direct_samp") 
+    if (key == "direct_samp")
     {
         return std::to_string(_direct_sampling);
     }
     return "";
 }
-
-

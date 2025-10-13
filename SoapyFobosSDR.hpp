@@ -10,19 +10,22 @@
 #include <SoapySDR/Device.hpp>
 #include <SoapySDR/Logger.h>
 #include <SoapySDR/Types.h>
+#include <condition_variable>
 #include <fobos.h>
+#include <mutex>
 #include <stdexcept>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
 // uncomment to bisplay debug info
-//#define SOAPY_FOBOS_PRINT_DEBUG
+// #define SOAPY_FOBOS_PRINT_DEBUG
 #define DEFAULT_BUFF_LEN (128 * 1024)
 #define DEFAULT_BUFS_COUNT 16
+
+static const char * __CLASS__ = "SoapyFobosSDR";
+
 //==============================================================================
-class SoapyFobosSDR: public SoapySDR::Device
+class SoapyFobosSDR : public SoapySDR::Device
 {
-public:
+  public:
     SoapyFobosSDR(const SoapySDR::Kwargs &args);
 
     ~SoapyFobosSDR(void);
@@ -55,28 +58,21 @@ public:
 
     SoapySDR::ArgInfoList getStreamArgsInfo(const int direction, const size_t channel) const;
 
-    SoapySDR::Stream *setupStream(const int direction, const std::string &format, const std::vector<size_t> &channels =
-            std::vector<size_t>(), const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
+    SoapySDR::Stream *setupStream(const int direction, const std::string &format,
+                                  const std::vector<size_t> &channels = std::vector<size_t>(),
+                                  const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
 
     void closeStream(SoapySDR::Stream *stream);
 
     size_t getStreamMTU(SoapySDR::Stream *stream) const;
 
-    int activateStream(
-            SoapySDR::Stream *stream,
-            const int flags = 0,
-            const long long timeNs = 0,
-            const size_t numElems = 0);
+    int activateStream(SoapySDR::Stream *stream, const int flags = 0, const long long timeNs = 0,
+                       const size_t numElems = 0);
 
     int deactivateStream(SoapySDR::Stream *stream, const int flags = 0, const long long timeNs = 0);
 
-    int readStream(
-            SoapySDR::Stream *stream,
-            void * const *buffs,
-            const size_t numElems,
-            int &flags,
-            long long &timeNs,
-            const long timeoutUs = 100000);
+    int readStream(SoapySDR::Stream *stream, void *const *buffs, const size_t numElems, int &flags, long long &timeNs,
+                   const long timeoutUs = 100000);
 
     /*******************************************************************
      * Antenna API
@@ -116,12 +112,8 @@ public:
      * Frequency API
      ******************************************************************/
 
-    void setFrequency(
-            const int direction,
-            const size_t channel,
-            const std::string &name,
-            const double frequency,
-            const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
+    void setFrequency(const int direction, const size_t channel, const std::string &name, const double frequency,
+                      const SoapySDR::Kwargs &args = SoapySDR::Kwargs());
 
     double getFrequency(const int direction, const size_t channel, const std::string &name) const;
 
@@ -154,21 +146,20 @@ public:
     std::string readSetting(const std::string &key) const;
 
 private:
-    const char * __CLASS__ = "SoapyFobosSDR"; 
     //device handle
     int _device_index;
     fobos_dev_t *_dev;
 
     // device info
     char lib_version[32];
-    char drv_version[32];  
+    char drv_version[32];
     char hw_revision[32];
     char fw_version[32];
     char manufacturer[32];
     char product[32];
-    char serial[32]; 
+    char serial[32];
 
-    //cached settings
+    // cached settings
     double _sample_rate;
     double _center_frequency;
     int _direct_sampling;
@@ -177,7 +168,7 @@ private:
     double _vga_gain;
     double _vga_gain_scale;
 
-    //async api usage
+    // async api usage
     std::thread _rx_async_thread;
     void rx_async_thread_loop(void);
 
@@ -185,7 +176,7 @@ private:
     bool _running;
     std::mutex _rx_mutex;
     std::condition_variable _rx_cond;
-    float** _rx_bufs;
+    float **_rx_bufs;
     size_t _rx_buffs_count;
     size_t _rx_buff_len;
     size_t _rx_filled;
@@ -195,8 +186,7 @@ private:
     size_t _rx_pos_r;
     uint32_t _overruns_count;
 
-public:
-    void read_samples(float* buf, uint32_t buf_length);
-
+  public:
+    void read_samples(float *buf, uint32_t buf_length);
 };
 //==============================================================================
